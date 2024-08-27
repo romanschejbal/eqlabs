@@ -9,7 +9,6 @@ impl Encoder<Message> for BitcoinCodec {
     type Error = Error;
 
     fn encode(&mut self, message: Message, dst: &mut BytesMut) -> Result<(), Self::Error> {
-        tracing::info!("Encoding message: {message:?}");
         message.encode(dst);
         Ok(())
     }
@@ -20,8 +19,6 @@ impl Decoder for BitcoinCodec {
     type Error = Error;
 
     fn decode(&mut self, src: &mut BytesMut) -> Result<Option<Self::Item>, Self::Error> {
-        tracing::info!("Decoding message");
-
         if src.is_empty() || src.len() < 24 {
             // Not enough bytes
             return Ok(None);

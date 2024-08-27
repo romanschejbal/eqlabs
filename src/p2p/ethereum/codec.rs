@@ -125,8 +125,6 @@ impl Decoder for RLPx {
         let len = src.len();
         let message = src.split_to(len);
 
-        println!("Received {}: {message:?}", src.len());
-
         Ok(None)
     }
 }

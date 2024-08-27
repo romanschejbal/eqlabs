@@ -3,10 +3,7 @@ use super::{
     protocol::{Address, Command, Message, Payload, VersionMessage},
 };
 use anyhow::Result;
-use futures::{
-    stream::{SplitSink, SplitStream},
-    SinkExt, StreamExt,
-};
+use futures::{SinkExt, StreamExt};
 use tokio::net::{TcpStream, ToSocketAddrs};
 use tokio_util::codec::Framed;
 
@@ -31,7 +28,7 @@ impl Handshake {
 
         tokio::spawn(async move {
             let version_message = VersionMessage {
-                version: 70016,
+                version: 70015,
                 timestamp: 0,
                 user_agent: "/ramen/".into(),
                 addr_recv: Address {
@@ -69,15 +66,15 @@ impl Handshake {
 
                 match message.payload() {
                     Payload::Version(version) => {
-                        tracing::info!("version message received: {:?}", version);
+                        tracing::info!("Version message received: {:?}", version);
                         let message = Message::new(0xD9B4BEF9, Command::VerAck, Payload::VerAck);
                         tracing::info!("Sending verack: {:?}", message);
                     }
                     Payload::VerAck => {
-                        tracing::info!("verack message received");
+                        tracing::info!("Verack message received");
                     }
                     Payload::SendHeaders => {
-                        tracing::info!("sendheaders received. Closing connection.");
+                        tracing::info!("SendHeaders received. Closing connection.");
                         break;
                     }
                 }

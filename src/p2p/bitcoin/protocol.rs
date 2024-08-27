@@ -433,4 +433,30 @@ mod tests {
 
         assert_eq!(decoded, msg);
     }
+
+    #[test]
+    fn test_payload_length() {
+        let payload = Payload::Version(VersionMessage {
+            version: 70016,
+            services: 1033,
+            timestamp: 1680126222,
+            addr_recv: Address {
+                time: (),
+                services: 0,
+                ip: "2a02:8308:900c:5900:b59b:b551:1c26:2a8".parse().unwrap(),
+                port: Port(56190),
+            },
+            addr_from: Address {
+                time: (),
+                services: 1033,
+                ip: "::192.168.0.1".parse().unwrap(),
+                port: Port(0),
+            },
+            nonce: 6920951773072803923,
+            user_agent: "/Satoshi:23.0.0:Nakamoto//Satoshi:23.0.0:Nakamoto//Satoshi:23.0.0:Nakamoto//Satoshi:23.0.0:Nakamoto//Satoshi:23.0.0:Nakamoto//Satoshi:23.0.0:Nakamoto//Satoshi:23.0.0:Nakamoto//Satoshi:23.0.0:Nakamoto//Satoshi:23.0.0:Nakamoto//Satoshi:23.0.0:Nakamoto//Satoshi:23.0.0:Nakamoto//Satoshi:23.0.0:Nakamoto//Satoshi:23.0.0:Nakamoto//Satoshi:23.0.0:Nakamoto//Satoshi:23.0.0:Nakamoto//Satoshi:23.0.0:Nakamoto//Satoshi:23.0.0:Nakamoto//Satoshi:23.0.0:Nakamoto//Satoshi:23.0.0:Nakamoto//Satoshi:23.0.0:Nakamoto//Satoshi:23.0.0:Nakamoto//Satoshi:23.0.0:Nakamoto//Satoshi:23.0.0:Nakamoto//Satoshi:23.0.0:Nakamoto//Satoshi:23.0.0:Nakamoto//Satoshi:23.0.0:Nakamoto//Satoshi:23.0.0:Nakamoto//Satoshi:23.0.0:Nakamoto//Satoshi:23.0.0:Nakamoto/".into(),
+            start_height: 1932515342,
+            relay: true,
+        });
+        assert_eq!(payload.encode(&mut BytesMut::new()), 813);
+    }
 }

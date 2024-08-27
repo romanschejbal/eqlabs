@@ -44,6 +44,6 @@ impl Encode for IpAddr {
             IpAddr::V4(ip) => buffer.put_slice(&[[0; 4], [0; 4], [0; 4], ip.octets()].concat()),
             IpAddr::V6(ip) => buffer.put_slice(&ip.octets()),
         }
-        std::mem::size_of::<IpAddr>()
+        16
     }
 }

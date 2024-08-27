@@ -35,7 +35,6 @@ macro_rules! make_decoder {
                     return Err(Error::NotEnoughBytes(stringify!($t)));
                 }
                 let value = buffer.$fn();
-                println!("Decoded {}: {}", stringify!($t), value);
                 Ok(value)
             }
         }
