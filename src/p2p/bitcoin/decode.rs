@@ -1,6 +1,6 @@
 use super::error::Error;
 use bytes::{Buf, BytesMut};
-use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
+use std::net::IpAddr;
 
 type Result<T> = std::result::Result<T, Error>;
 
@@ -57,6 +57,6 @@ impl Decode for IpAddr {
         }
         let ip = TryInto::<[u8; 16]>::try_into(&buffer[..16])?.into();
         buffer.advance(16);
-        return Ok(ip);
+        Ok(ip)
     }
 }

@@ -7,17 +7,7 @@ use futures::{SinkExt, StreamExt};
 use tokio::net::{TcpStream, ToSocketAddrs};
 use tokio_util::codec::Framed;
 
-#[derive(Debug, Clone, Default, PartialEq, Eq, Hash)]
-enum HandshakeState {
-    #[default]
-    Init,
-    Version,
-    VerAck,
-}
-
-pub struct Handshake {
-    state: HandshakeState,
-}
+pub struct Handshake {}
 
 impl Handshake {
     pub async fn connect(address: impl ToSocketAddrs) -> Result<Self> {
@@ -26,9 +16,11 @@ impl Handshake {
         let framed_stream = Framed::new(stream, BitcoinCodec);
         let (mut sink, mut stream) = framed_stream.split();
 
-        tokio::spawn(async move {
+        let (ready_tx, ready_rx) = tokio::sync::oneshot::channel();
+
+        let _ = tokio::spawn(async move {
             let version_message = VersionMessage {
-                version: 70015,
+                version: 70016,
                 timestamp: 0,
                 user_agent: "/ramen/".into(),
                 addr_recv: Address {
@@ -53,6 +45,7 @@ impl Handshake {
                 Command::Version,
                 Payload::Version(version_message),
             );
+            tracing::info!("Sending version message: {message:?}");
             let _ = sink.send(message).await;
 
             while let Some(message) = stream.next().await {
@@ -72,18 +65,26 @@ impl Handshake {
                     }
                     Payload::VerAck => {
                         tracing::info!("Verack message received");
+                        let _ = ready_tx.send(());
+                        break;
                     }
                     Payload::SendHeaders => {
-                        tracing::info!("SendHeaders received. Closing connection.");
-                        break;
+                        tracing::info!("SendHeaders received");
+                    }
+                    Payload::Empty => {
+                        tracing::info!("Empty payload received");
                     }
                 }
             }
-        })
-        .await?;
 
-        Ok(Self {
-            state: Default::default(),
+            while let Some(message) = stream.next().await {
+                // handle messages
+            }
         })
+        .await;
+
+        ready_rx.await?;
+
+        Ok(Self {})
     }
 }

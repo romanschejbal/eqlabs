@@ -62,6 +62,8 @@ pub enum Command {
     Version,
     VerAck,
     SendHeaders,
+    WtxIdRelay,
+    SendAddrV2,
 }
 
 impl Command {
@@ -69,7 +71,9 @@ impl Command {
         let decode = match &bytes[..12] {
             b"version\0\0\0\0\0" => Ok(Command::Version),
             b"verack\0\0\0\0\0\0" => Ok(Command::VerAck),
+            b"wtxidrelay\0\0" => Ok(Command::WtxIdRelay),
             b"sendheaders\0" => Ok(Command::SendHeaders),
+            b"sendaddrv2\0\0" => Ok(Command::SendAddrV2),
             x => Err(Error::Command(format!(
                 "unhandled command: {:?}",
                 String::from_utf8_lossy(x)
@@ -85,7 +89,9 @@ impl Encode for Command {
         match self {
             Self::Version => buffer.put_slice(b"version\0\0\0\0\0"),
             Self::VerAck => buffer.put_slice(b"verack\0\0\0\0\0\0"),
+            Self::WtxIdRelay => buffer.put_slice(b"wtxidrelay\0\0\0\0\0\0"),
             Self::SendHeaders => buffer.put_slice(b"sendheaders\0"),
+            Self::SendAddrV2 => buffer.put_slice(b"sendaddrv2\0\0"),
         };
         12
     }
@@ -96,6 +102,7 @@ pub enum Payload {
     Version(VersionMessage),
     VerAck,
     SendHeaders,
+    Empty,
 }
 
 impl Payload {
@@ -106,7 +113,9 @@ impl Payload {
                 Ok(Payload::Version(version))
             }
             Command::VerAck => Ok(Payload::VerAck),
+            Command::WtxIdRelay => Ok(Payload::Empty),
             Command::SendHeaders => Ok(Payload::SendHeaders),
+            Command::SendAddrV2 => Ok(Payload::Empty),
         }
     }
 }
@@ -117,6 +126,7 @@ impl Encode for Payload {
             Self::Version(version) => version.encode(buffer),
             Self::VerAck => ().encode(buffer),
             Self::SendHeaders => ().encode(buffer),
+            Self::Empty => ().encode(buffer),
         }
     }
 }

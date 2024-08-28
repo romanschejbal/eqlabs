@@ -96,7 +96,7 @@ impl Encoder<Message> for RLPx {
                 let d = d.finalize().into_bytes();
 
                 // Alice sends the encrypted message R || iv || c || d where c = AES(kE, iv , m) and d = MAC(sha256(kM), iv || c) to Bob.
-                let messsage = vec![
+                let messsage = [
                     &self.initiator_pubk.serialize_uncompressed()[..],
                     &iv[..],
                     &c[..],

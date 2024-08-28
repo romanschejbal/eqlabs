@@ -9,7 +9,7 @@ async fn main() -> anyhow::Result<()> {
 
     let endpoint = "seed.bitcoin.sipa.be:8333";
     tracing::info!("Connecting to {endpoint}");
-    let handshake = bitcoin::Handshake::connect(endpoint).await?;
+    let _handshake = bitcoin::Handshake::connect(endpoint).await?;
 
     Ok(())
 }
