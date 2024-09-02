@@ -4,21 +4,39 @@ use super::{
 };
 use anyhow::Result;
 use futures::{SinkExt, StreamExt};
-use tokio::net::{TcpStream, ToSocketAddrs};
+use tokio::{
+    net::{TcpStream, ToSocketAddrs},
+    sync::mpsc::{Receiver, Sender},
+};
 use tokio_util::codec::Framed;
 
-pub struct Handshake {}
+pub struct Handshake {
+    stream_rx: Receiver<Message>,
+    sink_tx: Sender<Message>,
+}
 
 impl Handshake {
     pub async fn connect(address: impl ToSocketAddrs) -> Result<Self> {
         let stream = TcpStream::connect(address).await?;
         tracing::debug!("Connection established");
+
         let framed_stream = Framed::new(stream, BitcoinCodec);
         let (mut sink, mut stream) = framed_stream.split();
-
+        let (sink_tx, mut sink_rx) = tokio::sync::mpsc::channel(1);
         let (ready_tx, ready_rx) = tokio::sync::oneshot::channel();
+        let (stream_tx, stream_rx) = tokio::sync::mpsc::channel(1);
 
-        let _ = tokio::spawn(async move {
+        tokio::spawn(async move {
+            while let Some(message) = sink_rx.recv().await {
+                if let Err(e) = sink.send(message).await {
+                    tracing::error!("Error: {}", e);
+                    break;
+                }
+            }
+        });
+
+        let sink_tx_inner = sink_tx.clone();
+        tokio::spawn(async move {
             let version_message = VersionMessage {
                 version: 70016,
                 timestamp: 0,
@@ -46,7 +64,7 @@ impl Handshake {
                 Payload::Version(version_message),
             );
             tracing::info!("Sending version message: {message:?}");
-            let _ = sink.send(message).await;
+            let _ = sink_tx_inner.send(message).await;
 
             while let Some(message) = stream.next().await {
                 let message = match message {
@@ -78,13 +96,27 @@ impl Handshake {
             }
 
             while let Some(message) = stream.next().await {
-                // handle messages
+                match message {
+                    Ok(message) => {
+                        if let Err(e) = stream_tx.send(message).await {
+                            tracing::error!("Error: {}", e);
+                            break;
+                        }
+                    }
+                    Err(e) => {
+                        tracing::error!("Error: {}", e);
+                        continue;
+                    }
+                }
             }
-        })
-        .await;
+        });
 
         ready_rx.await?;
 
-        Ok(Self {})
+        Ok(Self { stream_rx, sink_tx })
+    }
+
+    pub fn split(self) -> (Sender<Message>, Receiver<Message>) {
+        (self.sink_tx, self.stream_rx)
     }
 }
