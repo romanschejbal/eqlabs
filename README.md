@@ -39,7 +39,7 @@ To run the Bitcoin handshake example, follow these steps:
    This will establish a connection with a Bitcoin node and perform the initial handshake. You should see logs indicating the connection status and message exchange.
 
 4. **(Optional) Ethereum Handshake**:
-   The Ethereum handshake is currently commented out in the `main.rs` file. You can uncomment the Ethereum-specific code and run it similarly by following the steps above.
+   The Ethereum handshake is currently commented out in the `main.rs` file as I didn't manage to get through the cryptographic handshake.
 
 ## Code Structure
 
